@@ -12,11 +12,11 @@ import addressRouter from './routes/addressRoute.js';
 import orderRouter from './routes/orderRoute.js';
 
 
- const app = express();
- const port = process.env.PORT || 4000;
-
- await connectDB()
- await connectCloudinary()
+const app = express();
+const port = process.env.PORT || 4000;
+ 
+connectDB().catch(err => console.log(err));
+connectCloudinary().catch(err => console.log(err));
 
  // Allow multiple origins
  const allowedOrigins= ['http://localhost:5173']
@@ -35,6 +35,8 @@ import orderRouter from './routes/orderRoute.js';
  app.use('/api/address', addressRouter)
  app.use('/api/order', orderRouter)
  
- app.listen(port, ()=>{
+ 
+app.listen(port, ()=>{
          console.log(`Server is running on http://localhost:${port}`);
- })
+})
+
