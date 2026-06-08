@@ -39,6 +39,70 @@ const Cart = () => {
         }
     }
 
+    const loadRazorpayScript = (src) => {
+        return new Promise((resolve) => {
+            if (document.querySelector(`script[src="${src}"]`)) return resolve(true);
+            const script = document.createElement('script');
+            script.src = src;
+            script.onload = () => resolve(true);
+            script.onerror = () => resolve(false);
+            document.body.appendChild(script);
+        });
+    }
+
+    const verifyPayment = async (paymentResponse, orderId) => {
+        try {
+            const { data } = await axios.post('/api/order/razorpay/verify', {
+                razorpay_payment_id: paymentResponse.razorpay_payment_id,
+                razorpay_order_id: paymentResponse.razorpay_order_id,
+                razorpay_signature: paymentResponse.razorpay_signature,
+                orderId,
+            });
+            return data;
+        } catch (error) {
+            return { success: false, message: error.message };
+        }
+    }
+
+    const openRazorpayCheckout = async (payOrder) => {
+        const scriptLoaded = await loadRazorpayScript('https://checkout.razorpay.com/v1/checkout.js');
+        if (!scriptLoaded) {
+            toast.error('Unable to load payment gateway. Please try again.');
+            return;
+        }
+
+        const options = {
+            key: payOrder.key_id,
+            amount: payOrder.amount,
+            currency: payOrder.currency,
+            name: 'GreenCart',
+            description: 'Order Payment',
+            order_id: payOrder.id,
+            prefill: {
+                name: user?.name || '',
+                email: user?.email || '',
+            },
+            notes: {
+                orderId: payOrder.notes.orderId,
+            },
+            handler: async (response) => {
+                const verification = await verifyPayment(response, payOrder.notes.orderId);
+                if (verification.success) {
+                    toast.success('Payment successful');
+                    setCartItems({});
+                    navigate('/my-orders');
+                } else {
+                    toast.error(verification.message || 'Payment verification failed');
+                }
+            },
+            theme: {
+                color: '#2563eb',
+            },
+        };
+
+        const checkout = new window.Razorpay(options);
+        checkout.open();
+    }
     const placeOrder = async () => {
         try {
             if (!selectedAddress) {
@@ -60,6 +124,8 @@ const Cart = () => {
                 } else {
                     toast.error(data.message)
                 }
+
+                return;
             } else {
                 // Place Order with Razorpay
                 const { data } = await axios.post('/api/order/razorpay', {
@@ -69,7 +135,11 @@ const Cart = () => {
                 })
 
                 if (data.success) {
-                    window.location.replace(data.url)
+                    await openRazorpayCheckout({
+                        ...data.order,
+                        key_id: data.key_id,
+                        currency: data.currency,
+                    })
                 } else {
                     toast.error(data.message)
                 }
@@ -78,6 +148,7 @@ const Cart = () => {
             toast.error(error.message)
         }
     }
+
 
     useEffect(() => {
         if (products.length > 0 && cartItems) {
@@ -193,10 +264,13 @@ const Cart = () => {
                 </div>
 
                 <button onClick={placeOrder} className="w-full py-3 mt-6 cursor-pointer bg-primary text-white font-medium hover:bg-primary-dull transition">
-                    {paymentOption === "COD" ? "Place Order" : "Proceed to Chckout"}
+                    {paymentOption === "COD" ? "Place Order" : "Proceed to Checkout"}
                 </button>
             </div>
         </div>
     ) : null
 }
+
+
+
 export default Cart;

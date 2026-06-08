@@ -1,7 +1,7 @@
 import Order from "../models/Order.js";
 import Product from "../models/Product.js";
 import Razorpay from "razorpay";
-
+import crypto from "crypto";
 
 // Place Order COD : /api/order/cod
 export const placeOrderCOD = async (req, res) => {
@@ -32,6 +32,7 @@ export const placeOrderCOD = async (req, res) => {
         return res.json({ success: false, message: error.message });
     }
 }
+
 
 // Place Order Razorpay : /api/order/razorpay
 export const placeOrderRazorpay = async (req, res) => {
@@ -82,7 +83,8 @@ export const placeOrderRazorpay = async (req, res) => {
 
         const razorpayOrder = await razorpayInstance.orders.create({
             amount: amount * 100,
-            currency: "$",
+            
+            currency: process.env.RAZORPAY_CURRENCY,
             receipt: order._id.toString(),
             notes: {
                 userId: userId,
@@ -93,6 +95,8 @@ export const placeOrderRazorpay = async (req, res) => {
         return res.json({
             success: true,
             order: razorpayOrder,
+            key_id: process.env.RAZORPAY_KEY_ID,
+            currency: process.env.RAZORPAY_CURRENCY 
         });
     }
     catch (error) {
@@ -103,6 +107,41 @@ export const placeOrderRazorpay = async (req, res) => {
         });
     }
 };
+
+export const verifyOrderRazorpay = async (req, res) => {
+    try {
+        const { razorpay_payment_id, razorpay_order_id, razorpay_signature, orderId } = req.body;
+
+        if (!razorpay_payment_id || !razorpay_order_id || !razorpay_signature || !orderId) {
+            return res.json({ success: false, message: "Invalid payment verification data" });
+        }
+
+        const generatedSignature = crypto
+            .createHmac("sha256", process.env.RAZORPAY_KEY_SECRET)
+            .update(`${razorpay_order_id}|${razorpay_payment_id}`)
+            .digest("hex");
+
+        if (generatedSignature !== razorpay_signature) {
+            return res.json({ success: false, message: "Payment verification failed" });
+        }
+
+        const updatedOrder = await Order.findOneAndUpdate(
+            { _id: orderId, userId: req.userId },
+            { isPaid: true, status: "Paid" },
+            { new: true }
+        );
+
+        if (!updatedOrder) {
+            return res.json({ success: false, message: "Order not found or unauthorized" });
+        }
+
+        return res.json({ success: true, message: "Payment verified successfully" });
+    } catch (error) {
+        console.log(error);
+        return res.json({ success: false, message: error.message });
+    }
+};
+
 
 // Get Orders by User ID : /api/order/user
 export const getUSerOrders = async (req, res) => {
