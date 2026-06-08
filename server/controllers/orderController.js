@@ -1,20 +1,20 @@
 import Order from "../models/Order.js";
-import Product from "../models/product.js";
-import User from "../models/User.js"
+import Product from "../models/Product.js";
+import Razorpay from "razorpay";
 
 
 // Place Order COD : /api/order/cod
-export const placeOrderCOD = async (req, res)=>{
+export const placeOrderCOD = async (req, res) => {
     try {
         const { userId, items, address } = req.body;
-        if(!address || items.length === 0){
-            return res.json({success: false, message: "Invalid data"})
+        if (!address || items.length === 0) {
+            return res.json({ success: false, message: "Invalid data" })
         }
         //Calculate Amount Using Items
-        let amount = await items.reduce(async (acc, item)=>{
+        let amount = await items.reduce(async (acc, item) => {
             const product = await Product.findById(item.product);
-            return (await acc ) + product.offerPrice * item.quantity;
-        },0)
+            return (await acc) + product.offerPrice * item.quantity;
+        }, 0)
 
         // Add Tax Charge (2%)
         amount += Math.floor(amount * 0.02);
@@ -27,20 +27,91 @@ export const placeOrderCOD = async (req, res)=>{
             paymentType: "COD",
         });
 
-        return res.json({success: true, message: "Order Placed Succesfully"})
+        return res.json({ success: true, message: "Order Placed Succesfully" })
     } catch (error) {
         return res.json({ success: false, message: error.message });
     }
 }
 
-// Get Orders by User ID : /api/order/user
-export const getUSerOrders = async (req, res)=>{
+// Place Order Razorpay : /api/order/razorpay
+export const placeOrderRazorpay = async (req, res) => {
     try {
-        const userId  = req.userId;
+        const { userId, items, address } = req.body;
+        const { origin } = req.headers;
+
+        if (!address || items.length === 0) {
+            return res.json({ success: false, message: "Invalid data" })
+        }
+
+        let productData = [];
+
+        //Calculate Amount Using Items
+        let amount = 0;
+        
+        for(const item of items) {
+            const product = await Product.findById(item.product);
+
+            if (!product) continue;
+
+            productData.push({
+                name: product.name,
+                price: product.offerPrice,
+                quantity: item.quantity,
+            });
+
+            amount += product.offerPrice * item.quantity;
+        }
+        // Add Tax Charge (2%)
+        amount += Math.floor(amount * 0.02);
+
+        const order = await Order.create({
+            userId,
+            items,
+            amount,
+            address,
+            paymentType: "Online",
+        });
+
+        // Razorpay Gateway Initialize
+        const razorpayInstance = new Razorpay({
+            key_id: process.env.RAZORPAY_KEY_ID,
+            key_secret: process.env.RAZORPAY_KEY_SECRET,
+        });
+
+        // Create Razorpay order
+
+        const razorpayOrder = await razorpayInstance.orders.create({
+            amount: amount * 100,
+            currency: "$",
+            receipt: order._id.toString(),
+            notes: {
+                userId: userId,
+                orderId: order._id.toString(),
+            }
+        });
+
+        return res.json({
+            success: true,
+            order: razorpayOrder,
+        });
+    }
+    catch (error) {
+        console.log(error);
+        return res.json({
+            success: false,
+            message: error.message
+        });
+    }
+};
+
+// Get Orders by User ID : /api/order/user
+export const getUSerOrders = async (req, res) => {
+    try {
+        const userId = req.userId;
         const orders = await Order.find({
             userId,
-            $or: [{ paymentType: "COD"}, {isPaid: true}]
-        }).populate("items.product address").sort({createdAt: -1});
+            $or: [{ paymentType: "COD" }, { isPaid: true }]
+        }).populate("items.product address").sort({ createdAt: -1 });
         res.json({ success: true, orders });
     } catch (error) {
         res.json({ success: false, message: error.message });
@@ -48,11 +119,11 @@ export const getUSerOrders = async (req, res)=>{
 }
 
 // Get All Orders ( for seller / admin) : /api/order/seller
-export const getAllOrders = async (req, res)=>{
+export const getAllOrders = async (req, res) => {
     try {
         const orders = await Order.find({
-            $or: [{ paymentType: "COD"}, {isPaid: true}]
-        }).populate("items.product address").sort({createdAt: -1});
+            $or: [{ paymentType: "COD" }, { isPaid: true }]
+        }).populate("items.product address").sort({ createdAt: -1 });
         res.json({ success: true, orders });
     } catch (error) {
         res.json({ success: false, message: error.message });

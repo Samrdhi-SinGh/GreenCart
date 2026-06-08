@@ -20,10 +20,6 @@ import Orders from './pages/seller/Orders';
 import Loading from './Components/Loading';
 
 
-
-
-
-
 const App = () => {
 
   const isSellerPath = useLocation().pathname.includes("seller");
