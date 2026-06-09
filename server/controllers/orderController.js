@@ -6,7 +6,8 @@ import crypto from "crypto";
 // Place Order COD : /api/order/cod
 export const placeOrderCOD = async (req, res) => {
     try {
-        const { userId, items, address } = req.body;
+        const { items, address } = req.body;
+        const userId = req.userId;
         if (!address || items.length === 0) {
             return res.json({ success: false, message: "Invalid data" })
         }
@@ -37,7 +38,8 @@ export const placeOrderCOD = async (req, res) => {
 // Place Order Razorpay : /api/order/razorpay
 export const placeOrderRazorpay = async (req, res) => {
     try {
-        const { userId, items, address } = req.body;
+        const { items, address } = req.body;
+        const userId = req.userId;
         const { origin } = req.headers;
 
         if (!address || items.length === 0) {
