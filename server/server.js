@@ -16,15 +16,23 @@ const app = express();
 
  app.set("trust proxy", 1);
 
+app.use((req, res, next) => {
+    res.header("Access-Control-Allow-Credentials", "true");
+    next();
+});
+
+  // Middleware configuration
+ app.use(express.json()); 
+ app.use(cookieParser());
+
  app.use(cors({
     origin:
         "https://greencart-frontend-0thz.onrender.com",
-    credentials: true
+    credentials: true,
+    methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"]
+
 }));
 
- // Middleware configuration
- app.use(express.json()); 
- app.use(cookieParser());
 
 await connectDB()
 await connectCloudinary()
