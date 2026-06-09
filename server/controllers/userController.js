@@ -76,6 +76,9 @@ export const login = async (req, res) => {
 
 // Check Auth : /api/user/is-auth
 export const isAuth = (req, res, next) => {
+    console.log("🔥 COOKIE RECEIVED:", req.cookies);
+    console.log("🔥 TOKEN:", req.cookies?.token);
+
     const token = req.cookies.token;
 
     if (!token) return res.status(401).json({ success: false });
