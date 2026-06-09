@@ -90,7 +90,7 @@ export const isAuth = async (req, res)=>{
 export const logout = async(req, res)=>{
     try{
 
-           res.cookie("token", token, {
+           res.clearCookie("token", {
             httpOnly: true,  //Prevent JavaScript to access cookie
             secure: process.env.NODE_ENV === 'production', // USe secure cookies in production
             sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'strict' , // CSRF protection
