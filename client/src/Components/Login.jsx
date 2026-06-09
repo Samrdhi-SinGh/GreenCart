@@ -19,11 +19,11 @@ const Login = () => {
                     : { email, password };
 
             const { data } = await axios.post(
-                `${import.meta.env.VITE_BACKEND_URL}/api/user/${state}`,
+                `${import.meta.env.VITE_BACKEND_URL}/api/user/login`,
                 payload,
                 { withCredentials: true }
             );
-            
+
             if (data.success) {
                 navigate('/')
                 setUser(data.user)
