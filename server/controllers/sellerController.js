@@ -16,7 +16,7 @@ export const sellerLogin = async (req, res) =>{
             maxAge: 7 * 24 * 60 * 60 * 1000,
         });
 
-        res.cookie('sellerToken', token, getCookieOptions());
+        //res.cookie('sellerToken', token, getCookieOptions());
 
         return res.json({success: true, message: "Logged In"});
     }else{
