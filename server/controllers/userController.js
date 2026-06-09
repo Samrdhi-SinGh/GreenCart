@@ -76,18 +76,24 @@ export const login = async (req, res) => {
 
 // Check Auth : /api/user/is-auth
 export const isAuth = (req, res, next) => {
-    console.log("🔥 COOKIE RECEIVED:", req.cookies);
-    console.log("🔥 TOKEN:", req.cookies?.token);
+    console.log("🔥 COOKIES RECEIVED:", req.cookies);  // 👈 ADD THIS
 
     const token = req.cookies.token;
 
-    if (!token) return res.status(401).json({ success: false });
+    if (!token) {
+        console.log("❌ NO TOKEN FOUND");
+        return res.status(401).json({ success: false, message: "Not Authorized" });
+    }
 
     try {
         const decoded = jwt.verify(token, process.env.JWT_SECRET);
         req.userId = decoded.id;
+
+        console.log("✅ USER ID FROM TOKEN:", req.userId); // 👈 ADD THIS
+
         next();
     } catch (err) {
+        console.log("❌ INVALID TOKEN");
         return res.status(401).json({ success: false });
     }
 };
