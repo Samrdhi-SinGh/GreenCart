@@ -1,101 +1,159 @@
-import User from "../models/User.js";
-import bcrypt from "bcrypt";
-import jwt from 'jsonwebtoken';
+import { createContext, useContext, useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
+import toast from "react-hot-toast";
+import axios from "axios";
 
-//Register User : /api/user/register
-export const register = async (req, res)=>{
-    try{
-        const {name, email, password } = req.body;
+axios.defaults.withCredentials = true;
+axios.defaults.baseURL = import.meta.env.VITE_BACKEND_URL;
 
-        if(!name || !email || !password){
-            return res.json({success: false, message: 'Missing Details'})
+export const AppContext = createContext();
+
+export const AppContextProvider = ({children})=>{
+
+    const currency = import.meta.env.VITE_CURRENCY;
+    const navigate = useNavigate();
+
+    const [user, setUser] = useState(null);
+    const [isSeller, setIsSeller] = useState(false)
+    const [showUserLogin, setShowUserLogin] = useState(false)
+    const [products, setProducts] = useState([])
+
+    const [cartItems, setCartItems] = useState({})
+    const [searchQuery, setSearchQuery] = useState({})
+
+    // Fetch Seller Status
+    const fetchSeller = async ()=>{
+        try {
+            const { data } = await axios.get('/api/seller/is-auth')
+            if(data.success){
+                setIsSeller(true)
+            }else{
+                setIsSeller(false)
+            }
+        } catch (error) {
+            setIsSeller(false)
         }
+    }
 
-        const existingUser = await User.findOne({email})
-
-        if(existingUser)
-            return res.json({success: false, message: 'Missing Details'})
-
-        const hashedPassword = await bcrypt.hash(password, 10)
-
-        const user = await User.create({name, email, password: hashedPassword})
-
-        const token = jwt.sign({id: user._id}, process.env.JWT_SECRET, {expiresIn: '7d'});
-
-        res.cookie('token', token, {
-            httpOnly: true,  //Prevent JavaScript to access cookie
-            secure: process.env.NODE_ENV === 'production', // USe secure cookies in production
-            sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'strict' , // CSRF protection
-            maxAge: 7 * 24 * 60 * 60 * 1000, // Cookie expiration time
-        })
-
-        return res.json({success: true, user: {email: user.email, name: user.name}})
-    } catch(error) {
-        console.log(error.message);
-        res.json({success: false, message: error.message });
+    // Fetch User Auth Status , User Data and Cart Items
+const fetchUser = async ()=>{
+    try {
+        const {data} = await axios.get('/api/user/is-auth');
+        if(data.success){
+            setUser(data.user);
+            setCartItems(data.user.cartItems);
+        }else{
+            setUser(null)
+            setCartItems({})
+        }
+    } catch (error) {
+        setUser(null)
     }
 }
 
 
-// Login User : /api/user/login 
-
-export const login = async (req, res)=>{
-    try{
-        const{email, password} = req.body;
-
-        if(!email || !password)
-            return res.json({success: false, message: 'Email and password are required'});
-        const user = await User.findOne({email});
-
-        if(!user){
-            return res.json({success: false, message: 'Invalid email or password'});
+    //Fetch all Product in here.
+    const fetchProducts = async ()=>{
+        try {
+            const {data} = await axios.get('/api/product/list')
+            if(data.success){
+                setProducts(data.products)
+            }else{
+                toast.error(data.message)
+            }
+        } catch (error) {
+            toast.error(error.message)
         }
+    }
 
-        const isMatch = await bcrypt.compare(password, user.password)
+//Add all the Product to Cart.
+const addToCart = (itemId)=>{
+    let cartData = structuredClone(cartItems);
 
-        if(!isMatch)
-            return res.json({success: false, message: 'Invalid email or password'});
+    if(cartData[itemId]){
+        cartData[itemId] += 1;
+    }else{
+        cartData[itemId] = 1;
+    }
+    setCartItems(cartData);
+    toast.success("Added to Cart")
+}
+
+    // Update Cart Item Quantity
+    const updateCartItem = (itemId, quantity)=>{ // This function is callecd one-addo-function.
+        let cartData = structuredClone(cartItems);
+        cartData[itemId] = quantity;
+        setCartItems(cartData)
+        toast.success("Cart Updated")
+    }
+
+// Remove Product from Cart
+const removeFromCart = (itemId)=>{
+    let cartData = structuredClone(cartItems);
+    if(cartData[itemId]){
+        cartData[itemId] -= 1;
+        if(cartData[itemId] === 0){
+            delete cartData[itemId];
+        }
+    }
+    toast.success("Removed from Cart")
+    setCartItems(cartData)
+}
+
+    // Get Cart Item Count
+    const getCartCount = ()=>{
+        let totalCount = 0;
+        for(const item in cartItems){
+            totalCount += cartItems[item];
+        }
+        return totalCount;
+    }
+
+//Get cart Total Amount
+const getCartAmount = () =>{
+    let totalAmount = 0;
+    for(const items in cartItems){
+        let itemInfo = products.find((product)=> product._id === items);
+        if(cartItems[items] > 0){
+            totalAmount += itemInfo.offerPrice * cartItems[items]
+        }
+    }
+    return Math.floor(totalAmount * 100) / 100;
+}
+ 
+
+
+    useEffect(()=>{
+        fetchUser()
+        fetchSeller()
+        fetchProducts()
+    },[])
+
+    // Update Database Cart Items
+    useEffect(()=>{
+        if(!user) return;
+
+        const updateCart = async ()=>{
+            try {
+                const{data} = await axios.post('/api/cart/update', {cartItems});
+                if (!data.success){
+                    toast.error(data.message);
+                }
+            } catch (error) {
+                toast.error(error.message);
+            }
+        };
         
-          const token = jwt.sign({id: user._id}, process.env.JWT_SECRET, {expiresIn: '7d'});
+        updateCart();
+    }, [cartItems, user]);
 
-        res.cookie('token', token, {
-            httpOnly: true,  
-            secure: process.env.NODE_ENV === 'production',
-            sameSite: process.env.NODE_ENV === 'production' ? 'none': 'strict',
-            maxAge: 7 * 24 * 60 * 60 * 1000,
-        })
-
-       return res.json({success: true, user: {email: user.email, name: user.name}})
-    } catch(error){
-       console.log(error.message);
-       res.json({success: false, message: error.message });
+    const value = {navigate, user, setUser, setIsSeller, isSeller, showUserLogin, setShowUserLogin, products, currency, addToCart, updateCartItem, removeFromCart, cartItems, searchQuery, setSearchQuery, getCartAmount, getCartCount, axios, fetchProducts, setCartItems
     }
-};
-
-
-// Check Auth : /api/user/is-auth
-export const isAuth = async (req, res)=>{
-    try{
-        const user = await User.findById(req.userId ).select("-password")
-         return res.json({ success: true, user})
-    } catch (error){
-        console.log(error.message);
-        res.json({success: false, message: error.message });
-    }
+    return <AppContext.Provider value={value}>
+        {children}
+    </AppContext.Provider>
 }
 
-//Logout User : /api/user/logout
-
-export const logout = async(req, res)=>{
-    try{
-        res.clearCookie('token', {
-            httpOnly: true,
-            secure: process.env.NODE_ENV === 'production',
-            sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'strict',
-        });
-        return res.json({success: true, message:"Logged Out"})
-    } catch (error){
-        console.log(error.message);
-        res.json({success: false, message: error.message });
-    }
+export const useAppContext = ()=>{
+    return useContext(AppContext);
 }
