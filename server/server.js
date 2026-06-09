@@ -14,7 +14,13 @@ import orderRouter from './routes/orderRoute.js';
 
 const app = express();
 
-app.use(cors({
+ // Middleware configuration
+ app.use(express.json()); 
+ app.use(cookieParser());
+
+ app.set("trust proxy", 1);
+
+ app.use(cors({
     origin: [
         "http://localhost:5173",
         "https://greencart-frontend-0thz.onrender.com"
@@ -22,15 +28,10 @@ app.use(cors({
     credentials: true
 }));
 
-const port = process.env.PORT || 4000;
-  
 await connectDB()
 await connectCloudinary()
 
-
- // Middleware configuration
- app.use(express.json()); 
- app.use(cookieParser());
+const port = process.env.PORT || 4000;
 
 
  app.get('/', (req, res) => res.send(" API is Working"));
