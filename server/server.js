@@ -25,7 +25,7 @@ app.set("trust proxy", 1);
  app.use(cookieParser());
 
  app.use(cors({
-    origin: "https://greencart-backend-2oym.onrender.com",
+    origin: "https://greencart-frontend-0thz.onrender.com",
     credentials: true,
     methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
     allowedHeaders: ["Content-Type", "Authorization"]

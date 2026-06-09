@@ -18,10 +18,8 @@ const Login = () => {
                     ? { name, email, password }
                     : { email, password };
 
-            const { data } = await axios.post(
-                `${import.meta.env.VITE_BACKEND_URL}/api/user/${state}`,
+            const { data } = await axios.post(`/api/user/${state}`,
                 payload,
-                { withCredentials: true }
             );
             if (data.success) {
                 navigate('/')
