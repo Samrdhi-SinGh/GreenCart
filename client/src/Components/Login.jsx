@@ -1,11 +1,10 @@
 import React from 'react'
 import { useAppContext } from '../context/AppContext';
 import toast from 'react-hot-toast';
-import {axiosInstance} from "../context/AppContext";
 
 const Login = () => {
 
-    const { setShowUserLogin, setUser, axios, navigate } = useAppContext()
+    const { setShowUserLogin, setUser, axiosInstance, navigate } = useAppContext()
     const [state, setState] = React.useState("login");
     const [name, setName] = React.useState("");
     const [email, setEmail] = React.useState("");
@@ -21,7 +20,6 @@ const Login = () => {
 
             const { data } = await axiosInstance.post(`/api/user/${state}`,
                 payload,
-                { withCredentials: true }
             );
             if (data.success) {
                 navigate('/')
