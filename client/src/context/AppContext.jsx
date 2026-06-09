@@ -1,12 +1,14 @@
 import { createContext, useContext, useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import toast from "react-hot-toast";
-import axios from "axios";
+import axiosInstance from "../api/axiosInstance";
 
-export const axiosInstance = axios.create({
+const axiosInstance = axios.create({
     baseURL: import.meta.env.VITE_BACKEND_URL,
     withCredentials: true
 });
+
+export default axiosInstance;
 
 export const AppContext = createContext();
 
