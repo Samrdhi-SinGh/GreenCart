@@ -75,26 +75,24 @@ export const login = async (req, res) => {
 
 
 // Check Auth : /api/user/is-auth
-export const isAuth = (req, res, next) => {
-    console.log("🔥 COOKIES RECEIVED:", req.cookies);  // 👈 ADD THIS
-
-    const token = req.cookies.token;
-
-    if (!token) {
-        console.log("❌ NO TOKEN FOUND");
-        return res.status(401).json({ success: false, message: "Not Authorized" });
-    }
-
+export const isAuth = async (req, res) => {
     try {
-        const decoded = jwt.verify(token, process.env.JWT_SECRET);
-        req.userId = decoded.id;
+        const user = await User.findById(req.userId).select("-password");
 
-        console.log("✅ USER ID FROM TOKEN:", req.userId); // 👈 ADD THIS
+        if (!user) {
+            return res.status(401).json({
+                success: false,
+                message: "User not found"
+            });
+        }
 
-        next();
-    } catch (err) {
-        console.log("❌ INVALID TOKEN");
-        return res.status(401).json({ success: false });
+        return res.json({ success: true, user });
+
+    } catch (error) {
+        return res.status(500).json({
+            success: false,
+            message: error.message
+        });
     }
 };
 

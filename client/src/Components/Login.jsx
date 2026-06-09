@@ -20,6 +20,7 @@ const Login = () => {
 
             const { data } = await axios.post(`/api/user/${state}`,
                 payload,
+                { withCredentials: true }
             );
             if (data.success) {
                 navigate('/')
