@@ -74,6 +74,8 @@ export const login = async (req, res) => {
 
 // Check Auth : /api/user/is-auth
 export const isAuth = async (req, res) => {
+    console.log("COOKIE RECEIVED:", req.cookies);
+    console.log("USER ID:", req.userId);
     try {
 
         if (!req.userId) {

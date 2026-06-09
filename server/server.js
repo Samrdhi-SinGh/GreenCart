@@ -14,17 +14,15 @@ import orderRouter from './routes/orderRoute.js';
 
 const app = express();
 
+ app.set("trust proxy", 1);
+
  // Middleware configuration
  app.use(express.json()); 
  app.use(cookieParser());
 
- app.set("trust proxy", 1);
-
  app.use(cors({
-    origin: [
-        "http://localhost:5173",
-        "https://greencart-frontend-0thz.onrender.com"
-    ],
+    origin:
+        "https://greencart-frontend-0thz.onrender.com/",
     credentials: true
 }));
 
