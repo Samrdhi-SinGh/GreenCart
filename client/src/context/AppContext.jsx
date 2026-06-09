@@ -3,8 +3,10 @@ import { useNavigate } from "react-router-dom";
 import toast from "react-hot-toast";
 import axios from "axios";
 
-axios.defaults.baseURL = import.meta.env.VITE_BACKEND_URL;
-axios.defaults.withCredentials = true;
+const axiosInstance = axios.create({
+    baseURL: import.meta.env.VITE_BACKEND_URL,
+    withCredentials: true
+});
 
 export const AppContext = createContext();
 
@@ -24,7 +26,7 @@ export const AppContextProvider = ({ children }) => {
     // Fetch Seller Status
     const fetchSeller = async () => {
         try {
-            const { data } = await axios.get('/api/seller/is-auth', {withCredentials: true});
+            const { data } = await axiosInstance.get('/api/seller/is-auth', {withCredentials: true});
 
             setIsSeller(data.success);
         }
@@ -37,7 +39,7 @@ export const AppContextProvider = ({ children }) => {
     // Fetch User Auth Status , User Data and Cart Items
     const fetchUser = async () => {
         try {
-            const { data } = await axios.get('/api/user/is-auth', {withCredentials: true});
+            const { data } = await axiosInstance.get('/api/user/is-auth', {withCredentials: true});
 
             if (data.success) {
                 setUser(data.user);
@@ -56,7 +58,7 @@ export const AppContextProvider = ({ children }) => {
     //Fetch all Product in here.
     const fetchProducts = async () => {
         try {
-            const { data } = await axios.get('/api/product/list', {withCredentials: true});
+            const { data } = await axiosInstance.get('/api/product/list', {withCredentials: true});
 
             if (data.success) {
                 setProducts(data.products)
@@ -141,7 +143,7 @@ export const AppContextProvider = ({ children }) => {
 
         const updateCart = async () => {
             try {
-                const { data } = await axios.post('/api/cart/update', { cartItems });
+                const { data } = await axiosInstance.post('/api/cart/update', { cartItems });
                 if (!data.success) {
                     toast.error(data.message);
                 }
