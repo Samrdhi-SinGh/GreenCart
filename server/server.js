@@ -13,31 +13,19 @@ import addressRouter from './routes/addressRoute.js';
 import orderRouter from './routes/orderRoute.js';
 
 const app = express();
-
- app.set("trust proxy", 1);
-
-app.use((req, res, next) => {
-    res.header("Access-Control-Allow-Credentials", "true");
-    next();
-});
-
-  // Middleware configuration
- app.use(express.json()); 
- app.use(cookieParser());
-
- app.use(cors({
-    origin:
-        "https://greencart-frontend-0thz.onrender.com",
-    credentials: true,
-    methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"]
-
-}));
-
-
+const port = process.env.PORT || 4000;
+  
 await connectDB()
 await connectCloudinary()
 
-const port = process.env.PORT || 4000;
+
+ // Allow multiple origins
+ const allowedOrigins= ['http://localhost:5173']
+
+ // Middleware configuration
+ app.use(express.json()); 
+ app.use(cookieParser());
+ app.use(cors({origin: allowedOrigins, credentials: true}));
 
 
  app.get('/', (req, res) => res.send(" API is Working"));
@@ -52,4 +40,3 @@ const port = process.env.PORT || 4000;
 app.listen(port, ()=>{
          console.log(`Server is running on http://localhost:${port}`);
 })
-
