@@ -24,7 +24,7 @@ export const AppContextProvider = ({ children }) => {
     // Fetch Seller Status
     const fetchSeller = async () => {
         try {
-            const { data } = await axios.get('/api/seller/is-auth');
+            const { data } = await axios.get('/api/seller/is-auth', {withCredentials: true});
 
             setIsSeller(data.success);
         }
@@ -37,7 +37,7 @@ export const AppContextProvider = ({ children }) => {
     // Fetch User Auth Status , User Data and Cart Items
     const fetchUser = async () => {
         try {
-            const { data } = await axios.get('/api/user/is-auth');
+            const { data } = await axios.get('/api/user/is-auth', {withCredentials: true});
 
             if (data.success) {
                 setUser(data.user);
@@ -56,7 +56,7 @@ export const AppContextProvider = ({ children }) => {
     //Fetch all Product in here.
     const fetchProducts = async () => {
         try {
-            const { data } = await axios.get('/api/product/list');
+            const { data } = await axios.get('/api/product/list', {withCredentials: true});
 
             if (data.success) {
                 setProducts(data.products)
