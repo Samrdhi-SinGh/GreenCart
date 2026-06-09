@@ -22,7 +22,7 @@ const app = express();
 
  app.use(cors({
     origin:
-        "https://greencart-frontend-0thz.onrender.com/",
+        "https://greencart-frontend-0thz.onrender.com",
     credentials: true
 }));
 
