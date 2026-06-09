@@ -20,7 +20,7 @@ await connectCloudinary()
 
 
  // Allow multiple origins
- const allowedOrigins= ['https://greencart-9i37.onrender.com']
+ const allowedOrigins= [process.env.CLIENT_URL];
 
 
  // Middleware configuration
