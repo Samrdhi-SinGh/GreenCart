@@ -18,6 +18,7 @@ const port = process.env.PORT || 4000;
 await connectDB()
 await connectCloudinary()
 
+app.set("trust proxy", 1);
 
  // Middleware configuration
  app.use(express.json()); 
@@ -29,8 +30,6 @@ await connectCloudinary()
     methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
     allowedHeaders: ["Content-Type", "Authorization"]
 }));
-
-app.options("*", cors());
 
 
  app.get('/', (req, res) => res.send(" API is Working"));
