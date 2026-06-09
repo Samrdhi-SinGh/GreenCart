@@ -1,5 +1,4 @@
 import jwt from 'jsonwebtoken';
-import { getCookieOptions } from '../configs/cookieOptions';
 
 // Login Seller : /api/seller/login
 
@@ -10,12 +9,12 @@ export const sellerLogin = async (req, res) =>{
     if(password === process.env.SELLER_PASSWORD && email === process.env.SELLER_EMAIL){
         const token = jwt.sign({email},  process.env.JWT_SECRET, {expiresIn: '7d'});
 
-        //    res.cookie('sellerToken', token, {
-        //     httpOnly: true,  
-        //     secure: process.env.NODE_ENV === 'production', 
-        //     sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'strict' , 
-        //     maxAge: 7 * 24 * 60 * 60 * 1000,
-        // });
+           res.cookie('sellerToken', token, {
+            httpOnly: true,  
+            secure: process.env.NODE_ENV === 'production', 
+            sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'strict' , 
+            maxAge: 7 * 24 * 60 * 60 * 1000,
+        });
 
         res.cookie('sellerToken', token, getCookieOptions());
 
@@ -43,13 +42,13 @@ export const isSellerAuth = async (req, res)=>{
 
 export const sellerLogout = async(req, res)=>{
     try{
-        // res.clearCookie('sellerToken', {
-        //     httpOnly: true,
-        //     secure: process.env.NODE_ENV === 'production',
-        //     sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'strict',
-        // });
+        res.clearCookie('sellerToken', {
+            httpOnly: true,
+            secure: process.env.NODE_ENV === 'production',
+            sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'strict',
+        });
 
-        res.clearCookie('sellerToken', getCookieOptions());
+
 
         return res.json({success: true, message:"Logged Out"})
     } catch (error){
