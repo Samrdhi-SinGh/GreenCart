@@ -18,6 +18,16 @@ const port = process.env.PORT || 4000;
 await connectDB()
 await connectCloudinary()
 
+app.use(
+  cors({
+    origin: [
+      "http://localhost:5173",
+      "https://greencart-frontend-ksov.onrender.com"
+    ],
+    credentials: true
+  })
+);
+
 
  // Allow multiple origins
  const allowedOrigins= ['http://localhost:5173']
@@ -25,7 +35,6 @@ await connectCloudinary()
  // Middleware configuration
  app.use(express.json()); 
  app.use(cookieParser());
- app.use(cors({origin: allowedOrigins, credentials: true}));
 
 
  app.get('/', (req, res) => res.send(" API is Working"));
