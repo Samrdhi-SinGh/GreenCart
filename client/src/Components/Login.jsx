@@ -13,12 +13,17 @@ const Login = () => {
     const onSubmitHandler = async (event) => {
         try {
             event.preventDefault();
+            const payload =
+                state === "register"
+                    ? { name, email, password }
+                    : { email, password };
 
             const { data } = await axios.post(
                 `${import.meta.env.VITE_BACKEND_URL}/api/user/${state}`,
-                { name, email, password },
+                payload,
                 { withCredentials: true }
             );
+            
             if (data.success) {
                 navigate('/')
                 setUser(data.user)

@@ -13,24 +13,20 @@ import addressRouter from './routes/addressRoute.js';
 import orderRouter from './routes/orderRoute.js';
 
 const app = express();
+
+app.use(cors({
+    origin: [
+        "http://localhost:5173",
+        "https://greencart-frontend-0thz.onrender.com"
+    ],
+    credentials: true
+}));
+
 const port = process.env.PORT || 4000;
   
 await connectDB()
 await connectCloudinary()
 
-app.use(
-  cors({
-    origin: [
-      "http://localhost:5173",
-      "https://greencart-frontend-ksov.onrender.com"
-    ],
-    credentials: true
-  })
-);
-
-
- // Allow multiple origins
- const allowedOrigins= ['http://localhost:5173']
 
  // Middleware configuration
  app.use(express.json()); 
